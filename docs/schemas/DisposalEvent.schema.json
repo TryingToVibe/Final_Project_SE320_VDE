@@ -1,0 +1,319 @@
+{
+  "$defs": {
+    "CycleStage": {
+      "description": "Physical station stages, in required order (reported by Team 2).",
+      "enum": [
+        "DETECTED",
+        "IDENTIFIED",
+        "POSITION_VERIFIED",
+        "LIQUID_ACCEPTED",
+        "EXTRACTED",
+        "VOLUME_VALIDATED",
+        "SANITIZED",
+        "RETRACTED",
+        "COMPLETED"
+      ],
+      "title": "CycleStage",
+      "type": "string"
+    },
+    "EventState": {
+      "description": "Lifecycle state of a disposal event (owned by this component).",
+      "enum": [
+        "ATTEMPTED",
+        "IN_PROGRESS",
+        "COMPLETED",
+        "VERIFIED",
+        "UNVERIFIED",
+        "REJECTED",
+        "FAULTED"
+      ],
+      "title": "EventState",
+      "type": "string"
+    },
+    "FaultRecord": {
+      "additionalProperties": false,
+      "description": "A fault reported by the station (codes defined by Team 6's fault model).",
+      "properties": {
+        "fault_code": {
+          "minLength": 1,
+          "title": "Fault Code",
+          "type": "string"
+        },
+        "stage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CycleStage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Stage at which the fault occurred"
+        },
+        "timestamp": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timestamp"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message"
+        }
+      },
+      "required": [
+        "fault_code"
+      ],
+      "title": "FaultRecord",
+      "type": "object"
+    },
+    "ReasonCode": {
+      "description": "Why an event was withheld from VERIFIED status.\n\nEach code maps to exactly one terminal state (see docs/STATE_MODEL.md).",
+      "enum": [
+        "IDENTITY_FAILURE",
+        "ACCOUNT_MISSING",
+        "ABORTED_PRE_EXTRACTION",
+        "LIQUID_NOT_ACCEPTED",
+        "POST_EXTRACTION_FAULT",
+        "VOLUME_MISSING",
+        "VOLUME_MISMATCH",
+        "VOLUME_LOW_CONFIDENCE",
+        "SANITATION_INCOMPLETE",
+        "MISSING_TIMESTAMP",
+        "STAGE_SEQUENCE_INVALID",
+        "TIMESTAMP_ORDER_INVALID"
+      ],
+      "title": "ReasonCode",
+      "type": "string"
+    },
+    "RuleResult": {
+      "additionalProperties": false,
+      "description": "Outcome of one verification rule, for traceability.",
+      "properties": {
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReasonCode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Detail"
+        }
+      },
+      "required": [
+        "rule_id",
+        "passed"
+      ],
+      "title": "RuleResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "OUTPUT: the event record consumed by Teams 4 and 7.\n\nInvariants (enforced below):\n  * VERIFIED  -> no reasons, every rule passed, deposit_volume_ml present\n  * any other terminal state -> at least one reason\n  * deposit_volume_ml is the user deposit only; sanitation fluid is separate",
+  "properties": {
+    "event_id": {
+      "title": "Event Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "$ref": "#/$defs/EventState"
+    },
+    "reasons": {
+      "items": {
+        "$ref": "#/$defs/ReasonCode"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "rule_results": {
+      "items": {
+        "$ref": "#/$defs/RuleResult"
+      },
+      "title": "Rule Results",
+      "type": "array"
+    },
+    "station_id": {
+      "title": "Station Id",
+      "type": "string"
+    },
+    "cycle_id": {
+      "title": "Cycle Id",
+      "type": "string"
+    },
+    "receptacle_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Receptacle Id"
+    },
+    "account_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Account Id"
+    },
+    "deposit_volume_ml": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deposit Volume Ml"
+    },
+    "sanitation_fluid_ml": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sanitation Fluid Ml"
+    },
+    "cycle_started_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cycle Started At"
+    },
+    "cycle_completed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cycle Completed At"
+    },
+    "stage_timestamps": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "propertyNames": {
+        "$ref": "#/$defs/CycleStage"
+      },
+      "title": "Stage Timestamps",
+      "type": "object"
+    },
+    "faults": {
+      "items": {
+        "$ref": "#/$defs/FaultRecord"
+      },
+      "title": "Faults",
+      "type": "array"
+    },
+    "retry_count": {
+      "default": 0,
+      "title": "Retry Count",
+      "type": "integer"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "source_payload_hash": {
+      "description": "SHA-256 of the canonical CycleReport; detects conflicting resubmissions",
+      "title": "Source Payload Hash",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "state",
+    "station_id",
+    "cycle_id",
+    "created_at",
+    "source_payload_hash"
+  ],
+  "title": "DisposalEvent",
+  "type": "object",
+  "$id": "vde/DisposalEvent/0.1.0"
+}

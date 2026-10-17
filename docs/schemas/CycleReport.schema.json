@@ -1,0 +1,304 @@
+{
+  "$defs": {
+    "CycleStage": {
+      "description": "Physical station stages, in required order (reported by Team 2).",
+      "enum": [
+        "DETECTED",
+        "IDENTIFIED",
+        "POSITION_VERIFIED",
+        "LIQUID_ACCEPTED",
+        "EXTRACTED",
+        "VOLUME_VALIDATED",
+        "SANITIZED",
+        "RETRACTED",
+        "COMPLETED"
+      ],
+      "title": "CycleStage",
+      "type": "string"
+    },
+    "FaultRecord": {
+      "additionalProperties": false,
+      "description": "A fault reported by the station (codes defined by Team 6's fault model).",
+      "properties": {
+        "fault_code": {
+          "minLength": 1,
+          "title": "Fault Code",
+          "type": "string"
+        },
+        "stage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CycleStage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Stage at which the fault occurred"
+        },
+        "timestamp": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timestamp"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message"
+        }
+      },
+      "required": [
+        "fault_code"
+      ],
+      "title": "FaultRecord",
+      "type": "object"
+    },
+    "SanitationResult": {
+      "additionalProperties": false,
+      "description": "Kept separate from VolumeResult so sanitation fluid is never counted as deposit.",
+      "properties": {
+        "completed": {
+          "title": "Completed",
+          "type": "boolean"
+        },
+        "fluid_ml": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fluid Ml"
+        }
+      },
+      "required": [
+        "completed"
+      ],
+      "title": "SanitationResult",
+      "type": "object"
+    },
+    "StageRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/CycleStage"
+        },
+        "timestamp": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When the station reached this stage. Missing -> MISSING_TIMESTAMP.",
+          "title": "Timestamp"
+        },
+        "passed": {
+          "default": true,
+          "description": "False if the station reports this stage's check failed.",
+          "title": "Passed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stage"
+      ],
+      "title": "StageRecord",
+      "type": "object"
+    },
+    "VolumeResult": {
+      "additionalProperties": false,
+      "description": "Deposit volume from Team 1's validated measurement. User deposit only.",
+      "properties": {
+        "primary_ml": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Measurement source A",
+          "title": "Primary Ml"
+        },
+        "secondary_ml": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Independent measurement source B",
+          "title": "Secondary Ml"
+        },
+        "validated_ml": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Team 1's validated deposit volume",
+          "title": "Validated Ml"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        }
+      },
+      "title": "VolumeResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "INPUT: everything known about one station processing cycle.",
+  "properties": {
+    "schema_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "station_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Station Id",
+      "type": "string"
+    },
+    "cycle_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Cycle Id",
+      "type": "string"
+    },
+    "reported_at": {
+      "format": "date-time",
+      "title": "Reported At",
+      "type": "string"
+    },
+    "receptacle_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_-]{1,64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Receptacle Id"
+    },
+    "account_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_-]{1,64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Account Id"
+    },
+    "stages": {
+      "items": {
+        "$ref": "#/$defs/StageRecord"
+      },
+      "title": "Stages",
+      "type": "array"
+    },
+    "volume": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VolumeResult"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "sanitation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SanitationResult"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "faults": {
+      "items": {
+        "$ref": "#/$defs/FaultRecord"
+      },
+      "title": "Faults",
+      "type": "array"
+    },
+    "retry_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Retry Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "station_id",
+    "cycle_id",
+    "reported_at"
+  ],
+  "title": "CycleReport",
+  "type": "object",
+  "$id": "vde/CycleReport/0.1.0"
+}

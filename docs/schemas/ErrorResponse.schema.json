@@ -1,0 +1,47 @@
+{
+  "$defs": {
+    "ErrorDetail": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "description": "Stable UPPER_SNAKE_CASE code, e.g. EVENT_CONFLICT",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "ErrorDetail",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Every non-2xx API response uses this envelope.",
+  "properties": {
+    "error": {
+      "$ref": "#/$defs/ErrorDetail"
+    },
+    "schema_version": {
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "error"
+  ],
+  "title": "ErrorResponse",
+  "type": "object",
+  "$id": "vde/ErrorResponse/0.1.0"
+}
