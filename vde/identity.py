@@ -7,6 +7,8 @@ event. This is the basis of duplicate-safe creation.
 NOTE: today we assume Team 2 supplies a unique `cycle_id` per station. If that
 assumption changes, this is the ONLY function that needs to change.
 """
+import hashlib
+import json
 import uuid
 
 # Fixed namespace for this component. Never change it: doing so would change
@@ -19,3 +21,13 @@ def derive_event_id(station_id: str, cycle_id: str) -> str:
     if not station_id or not cycle_id:
         raise ValueError("station_id and cycle_id are both required to derive an event id")
     return str(uuid.uuid5(VDE_NAMESPACE, f"{station_id}:{cycle_id}"))
+
+
+def payload_hash(report) -> str:
+    """SHA-256 of the canonical CycleReport JSON (sorted keys, UTC timestamps).
+
+    Two reports for the same cycle with equal hashes are the same submission;
+    different hashes mean a conflicting resubmission.
+    """
+    canonical = json.dumps(report.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
