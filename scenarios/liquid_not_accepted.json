@@ -1,0 +1,47 @@
+{
+  "name": "liquid_not_accepted",
+  "description": "Liquid-condition check failed at LIQUID_ACCEPTED and the station stopped there.",
+  "report": {
+    "schema_version": "0.1.0",
+    "station_id": "ST-01",
+    "cycle_id": "C-LIQREJ-001",
+    "reported_at": "2026-10-20T15:00:40Z",
+    "receptacle_id": "RCP-77",
+    "account_id": "ACC-1001",
+    "stages": [
+      {
+        "stage": "DETECTED",
+        "timestamp": "2026-10-20T15:00:00Z",
+        "passed": true
+      },
+      {
+        "stage": "IDENTIFIED",
+        "timestamp": "2026-10-20T15:00:04Z",
+        "passed": true
+      },
+      {
+        "stage": "POSITION_VERIFIED",
+        "timestamp": "2026-10-20T15:00:08Z",
+        "passed": true
+      },
+      {
+        "stage": "LIQUID_ACCEPTED",
+        "timestamp": "2026-10-20T15:00:12Z",
+        "passed": false
+      }
+    ],
+    "faults": [],
+    "retry_count": 0
+  },
+  "expected": {
+    "state": "REJECTED",
+    "reasons": [
+      "LIQUID_NOT_ACCEPTED",
+      "ABORTED_PRE_EXTRACTION",
+      "STAGE_SEQUENCE_INVALID",
+      "VOLUME_MISSING",
+      "SANITATION_INCOMPLETE"
+    ],
+    "deposit_volume_ml": null
+  }
+}

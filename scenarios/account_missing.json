@@ -1,0 +1,77 @@
+{
+  "name": "account_missing",
+  "description": "Receptacle identified but no authorized account is associated with the cycle.",
+  "report": {
+    "schema_version": "0.1.0",
+    "station_id": "ST-01",
+    "cycle_id": "C-NOACCT-001",
+    "reported_at": "2026-10-20T15:00:40Z",
+    "receptacle_id": "RCP-77",
+    "stages": [
+      {
+        "stage": "DETECTED",
+        "timestamp": "2026-10-20T15:00:00Z",
+        "passed": true
+      },
+      {
+        "stage": "IDENTIFIED",
+        "timestamp": "2026-10-20T15:00:04Z",
+        "passed": true
+      },
+      {
+        "stage": "POSITION_VERIFIED",
+        "timestamp": "2026-10-20T15:00:08Z",
+        "passed": true
+      },
+      {
+        "stage": "LIQUID_ACCEPTED",
+        "timestamp": "2026-10-20T15:00:12Z",
+        "passed": true
+      },
+      {
+        "stage": "EXTRACTED",
+        "timestamp": "2026-10-20T15:00:16Z",
+        "passed": true
+      },
+      {
+        "stage": "VOLUME_VALIDATED",
+        "timestamp": "2026-10-20T15:00:20Z",
+        "passed": true
+      },
+      {
+        "stage": "SANITIZED",
+        "timestamp": "2026-10-20T15:00:24Z",
+        "passed": true
+      },
+      {
+        "stage": "RETRACTED",
+        "timestamp": "2026-10-20T15:00:28Z",
+        "passed": true
+      },
+      {
+        "stage": "COMPLETED",
+        "timestamp": "2026-10-20T15:00:32Z",
+        "passed": true
+      }
+    ],
+    "volume": {
+      "primary_ml": 250.4,
+      "secondary_ml": 249.8,
+      "validated_ml": 250.1,
+      "confidence": 0.97
+    },
+    "sanitation": {
+      "completed": true,
+      "fluid_ml": 30.0
+    },
+    "faults": [],
+    "retry_count": 0
+  },
+  "expected": {
+    "state": "REJECTED",
+    "reasons": [
+      "ACCOUNT_MISSING"
+    ],
+    "deposit_volume_ml": null
+  }
+}
