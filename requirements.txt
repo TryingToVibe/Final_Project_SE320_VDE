@@ -2,3 +2,7 @@ pydantic>=2.6
 fastapi>=0.110
 uvicorn>=0.29
 pytest>=8
+# HTTP client for fastapi.testclient.TestClient: Starlette 1.x needs httpx2,
+# older Starlette needs httpx.
+httpx2
+httpx

@@ -28,6 +28,10 @@ def payload_hash(report) -> str:
 
     Two reports for the same cycle with equal hashes are the same submission;
     different hashes mean a conflicting resubmission.
+
+    `reported_at` is excluded: it records when the report was sent, not what
+    happened in the cycle, so a station retry must still hash the same.
     """
-    canonical = json.dumps(report.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    data = report.model_dump(mode="json", exclude={"reported_at"})
+    canonical = json.dumps(data, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()

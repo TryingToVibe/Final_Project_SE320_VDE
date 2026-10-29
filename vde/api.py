@@ -20,6 +20,7 @@ Endpoints (all JSON; every non-2xx body is an ErrorResponse):
 from __future__ import annotations
 
 from fastapi import FastAPI, Request, Response
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -41,8 +42,9 @@ def error_response(status: int, code: str, message: str, details: dict | None = 
 @app.exception_handler(RequestValidationError)
 async def _validation(_: Request, exc: RequestValidationError):
     # Converts FastAPI's default 422 body into our shared error envelope.
+    # jsonable_encoder: some errors carry a raw exception in `ctx`, which is not JSON.
     return error_response(422, "VALIDATION_ERROR", "Request body failed validation",
-                          {"errors": exc.errors()})
+                          {"errors": jsonable_encoder(exc.errors())})
 
 
 @app.exception_handler(EventConflictError)

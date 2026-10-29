@@ -91,7 +91,9 @@ Extra scenarios, so every reason code and terminal state is covered:
 ## Assumptions (confirm with Teammate A / team lead)
 
 * R4 only checks that EXTRACTED is present; R6 checks presence and order, not `passed`.
-* R5 ignores faults with no `stage`; a retryable fault before EXTRACTED does not block VERIFIED.
+* R5 treats a fault with no `stage` as post-extraction if EXTRACTED was reached
+  (it cannot be placed earlier), and ignores it otherwise; a retryable fault
+  before EXTRACTED does not block VERIFIED.
 * R7 reports MISSING_TIMESTAMP before checking order (one reason per rule).
 * R8 checks missing, then mismatch, then confidence (one reason per rule).
 
