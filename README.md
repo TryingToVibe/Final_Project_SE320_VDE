@@ -16,10 +16,10 @@ uvicorn vde.api:app --reload         # once Teammate C finishes the API
 | Area | Files | Owner |
 |---|---|---|
 | Contract: states, schema, IDs | `enums.py`, `models.py`, `state.py`, `identity.py`, `errors.py`, `config.py` | Team lead |
-| Rules engine (step 2) | `vde/rules.py`, `tests/test_rules.py` | Teammate A |
-| Scenarios (step 3) | `scenarios/*.json`, `tests/test_scenarios.py` | Teammate B |
-| Storage, service, API (steps 4–5) | `store.py`, `service.py`, `api.py`, `tests/test_store.py`, `test_service.py`, `test_api.py` | Teammate C |
-| Integration guide (step 6), reviews | `docs/` | Team lead |
+| Rules engine (step 2) | `vde/rules.py`, `tests/test_rules.py` | Michael Hallam |
+| Scenarios (step 3) | `scenarios/*.json`, `tests/test_scenarios.py` | Evan Juszczak |
+| Storage, service, API (steps 4–5) | `store.py`, `service.py`, `api.py`, `tests/test_store.py`, `test_service.py`, `test_api.py` | Shaima Farah |
+| Integration guide (step 6), reviews | `docs/` | Alberto Aguilar |
 
 Stubs raise `NotImplementedError("<owner>")`. Search for that to find your work.
 

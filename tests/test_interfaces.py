@@ -38,6 +38,11 @@ class TestPayloadHash(unittest.TestCase):
         reordered = dict(reversed(list(HAPPY["report"].items())))
         self.assertEqual(payload_hash(happy_report()), payload_hash(CycleReport.model_validate(reordered)))
 
+    def test_resend_with_new_reported_at_same_hash(self):
+        # A station retry of the same cycle is a duplicate, not a conflict.
+        resent = happy_report(reported_at="2026-10-20T15:05:00Z")
+        self.assertEqual(payload_hash(happy_report()), payload_hash(resent))
+
 
 class TestInMemoryStore(unittest.TestCase):
     def test_insert_get_and_duplicate(self):

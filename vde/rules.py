@@ -161,7 +161,8 @@ def r8_volume(report: CycleReport, config: VerificationConfig) -> RuleResult:
                      "primary_ml and secondary_ml are both required to check agreement")
     # Round away float noise (e.g. 250.4 - 245.4 = 5.000000000000028).
     diff = round(abs(vol.primary_ml - vol.secondary_ml), 6)
-    pct_limit = vol.validated_ml * config.volume_tolerance_pct / 100
+    # Round the limit the same way, or e.g. 2% of 53.3 comes out a hair under 1.066.
+    pct_limit = round(vol.validated_ml * config.volume_tolerance_pct / 100, 6)
     if diff > config.volume_tolerance_ml or diff > pct_limit:
         return _fail("R8_VOLUME", ReasonCode.VOLUME_MISMATCH,
                      f"measurements differ by {diff} mL (limits {config.volume_tolerance_ml} mL, "

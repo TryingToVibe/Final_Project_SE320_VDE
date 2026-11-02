@@ -169,6 +169,15 @@ class TestR8Volume(unittest.TestCase):
         r = with_volume(primary_ml=101.5, secondary_ml=98.5, validated_ml=100.0)
         self.assertEqual(r8_volume(r, DEFAULT_CONFIG).reason, R.VOLUME_MISMATCH)
 
+    def test_exactly_at_percentage_limit_passes(self):
+        # 2% of 53.3 mL = 1.066 mL; float math must not push the limit below that.
+        for validated in (53.3, 53.8, 101.7, 187.9):
+            with self.subTest(validated_ml=validated):
+                limit = round(validated * 2 / 100, 6)
+                r = with_volume(primary_ml=round(100 + limit, 6), secondary_ml=100.0,
+                                validated_ml=validated)
+                self.assertTrue(r8_volume(r, DEFAULT_CONFIG).passed)
+
     def test_low_confidence(self):
         self.assertEqual(r8_volume(with_volume(confidence=0.5), DEFAULT_CONFIG).reason,
                          R.VOLUME_LOW_CONFIDENCE)
