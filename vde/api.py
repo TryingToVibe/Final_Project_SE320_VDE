@@ -19,6 +19,8 @@ Endpoints (all JSON; every non-2xx body is an ErrorResponse):
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import FastAPI, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -26,12 +28,12 @@ from fastapi.responses import JSONResponse
 
 from .errors import EventConflictError, EventNotFoundError
 from .models import SCHEMA_VERSION, CycleReport, DisposalEvent, ErrorDetail, ErrorResponse
-from .store import EventStore, InMemoryEventStore
+from .service import submit_report
+from .store import EventStore, SQLiteEventStore
 
 app = FastAPI(title="Verified Disposal Event API", version=SCHEMA_VERSION)
 
-# TODO (Teammate C): switch to SQLiteEventStore once it is implemented.
-store: EventStore = InMemoryEventStore()
+store: EventStore = SQLiteEventStore()
 
 
 def error_response(status: int, code: str, message: str, details: dict | None = None) -> JSONResponse:
@@ -41,10 +43,12 @@ def error_response(status: int, code: str, message: str, details: dict | None = 
 
 @app.exception_handler(RequestValidationError)
 async def _validation(_: Request, exc: RequestValidationError):
-    # Converts FastAPI's default 422 body into our shared error envelope.
-    # jsonable_encoder: some errors carry a raw exception in `ctx`, which is not JSON.
-    return error_response(422, "VALIDATION_ERROR", "Request body failed validation",
-                          {"errors": jsonable_encoder(exc.errors())})
+    return error_response(
+        422,
+        "VALIDATION_ERROR",
+        "Request body failed validation",
+        {"errors": jsonable_encoder(exc.errors())},
+    )
 
 
 @app.exception_handler(EventConflictError)
@@ -64,12 +68,15 @@ def health():
 
 @app.post("/v1/events", response_model=DisposalEvent, status_code=201)
 def create_event(report: CycleReport, response: Response):
-    """Call service.submit_report(report, store, now=<current UTC time>).
-    If created is False, set response.status_code = 200."""
-    raise NotImplementedError("Teammate C")
+    event, created = submit_report(report, store, datetime.now(timezone.utc))
+    if not created:
+        response.status_code = 200
+    return event
 
 
 @app.get("/v1/events/{event_id}", response_model=DisposalEvent)
 def get_event(event_id: str):
-    """Return store.get(event_id) or raise EventNotFoundError."""
-    raise NotImplementedError("Teammate C")
+    event = store.get(event_id)
+    if event is None:
+        raise EventNotFoundError(event_id)
+    return event
