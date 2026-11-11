@@ -10,11 +10,12 @@ real implementation for the API.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 import sqlite3
-from typing import Optional
+from typing import Iterator, Optional
 
 from .errors import DuplicateEventError
-from .models import DisposalEvent
+from .models import DisposalEvent, to_utc_iso
 
 
 class EventStore(ABC):
@@ -24,10 +25,12 @@ class EventStore(ABC):
 
     @abstractmethod
     def insert(self, event: DisposalEvent) -> None:
-        ...
+        """Store a NEW event. Must raise DuplicateEventError if event_id exists.
+        Events are never updated or deleted (terminal states are immutable)."""
 
 
 class InMemoryEventStore(EventStore):
+    """Dictionary-backed store for tests. Complete; do not change behavior."""
 
     def __init__(self):
         self._events: dict[str, DisposalEvent] = {}
@@ -42,11 +45,18 @@ class InMemoryEventStore(EventStore):
 
 
 class SQLiteEventStore(EventStore):
+    """SQLite-backed store. The PRIMARY KEY on event_id is the duplicate guard.
+
+    Events are stored as event.model_dump_json() and rebuilt with
+    DisposalEvent.model_validate_json(). Timestamps are serialized to
+    milliseconds, so a stored event can differ from the in-memory one by
+    sub-millisecond precision.
+    """
 
     def __init__(self, path: str = "vde_events.db"):
         self.path = path
 
-        with sqlite3.connect(self.path) as connection:
+        with self._connect() as connection:
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS events (
                     event_id TEXT PRIMARY KEY,
@@ -59,8 +69,20 @@ class SQLiteEventStore(EventStore):
                 )
             """)
 
+    @contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
+        # `with sqlite3.connect(...)` only commits or rolls back; it does NOT
+        # close the connection. An open connection keeps the .db file locked on
+        # Windows, so close it explicitly.
+        connection = sqlite3.connect(self.path)
+        try:
+            with connection:  # commit on success, roll back on error
+                yield connection
+        finally:
+            connection.close()
+
     def get(self, event_id: str) -> Optional[DisposalEvent]:
-        with sqlite3.connect(self.path) as connection:
+        with self._connect() as connection:
             row = connection.execute(
                 "SELECT payload_json FROM events WHERE event_id = ?",
                 (event_id,),
@@ -72,10 +94,8 @@ class SQLiteEventStore(EventStore):
         return DisposalEvent.model_validate_json(row[0])
 
     def insert(self, event: DisposalEvent) -> None:
-        from .models import to_utc_iso
-
         try:
-            with sqlite3.connect(self.path) as connection:
+            with self._connect() as connection:
                 connection.execute(
                     """
                     INSERT INTO events (

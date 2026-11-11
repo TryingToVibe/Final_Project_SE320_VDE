@@ -19,6 +19,7 @@ Endpoints (all JSON; every non-2xx body is an ErrorResponse):
 """
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, Request, Response
@@ -33,7 +34,8 @@ from .store import EventStore, SQLiteEventStore
 
 app = FastAPI(title="Verified Disposal Event API", version=SCHEMA_VERSION)
 
-store: EventStore = SQLiteEventStore()
+# Set VDE_DB_PATH to choose the database file (tests point it at a temp folder).
+store: EventStore = SQLiteEventStore(os.environ.get("VDE_DB_PATH", "vde_events.db"))
 
 
 def error_response(status: int, code: str, message: str, details: dict | None = None) -> JSONResponse:

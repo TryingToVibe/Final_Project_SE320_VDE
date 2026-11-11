@@ -26,6 +26,18 @@ def submit_report(
     now: datetime,
     evaluator: Evaluator | None = None,
 ) -> tuple[DisposalEvent, bool]:
+    """Turn a report into a stored event, exactly once per station cycle.
+
+    Algorithm:
+      1. event_id = identity.derive_event_id(report.station_id, report.cycle_id)
+         new_hash = identity.payload_hash(report)
+      2. existing = store.get(event_id)
+         - exists and existing.source_payload_hash == new_hash -> return (existing, False)   # HTTP 200
+         - exists and hashes differ -> raise EventConflictError                             # HTTP 409
+      3. event = evaluator(report, now)      (default: rules.evaluate)
+      4. store.insert(event); if DuplicateEventError (two requests raced), re-run step 2
+      5. return (event, True)                                                                # HTTP 201
+    """
     event_id = derive_event_id(report.station_id, report.cycle_id)
     new_hash = payload_hash(report)
 
